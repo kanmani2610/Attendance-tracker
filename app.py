@@ -127,33 +127,30 @@ def report():
         results = []
 
         for emp in employees:
-            emp_id = emp["id"]
-            name = emp["name"]
+    name = emp["name"]
 
-            # ✅ FIXED QUERY (uses employee_id + date)
-            cursor.execute(
-                "SELECT status FROM attendance WHERE employee_id=? AND LOWER(date) LIKE ?",
-                (emp_id, f"%{month}%")
-            )
+    cursor.execute(
+        "SELECT status FROM attendance WHERE name=? AND month=?",
+        (name, month)
+    )
 
-            rows = cursor.fetchall()
-            attendance = [r[0] for r in rows]
+    rows = cursor.fetchall()
+    attendance = [r[0] for r in rows]
 
-            leaves = attendance.count("L")
-            present = attendance.count("P")
+    leaves = attendance.count("L")
+    present = attendance.count("P")
 
-            total_deduction = leaves * deduction
-            final_salary = emp["salary"] - total_deduction
+    total_deduction = leaves * deduction
+    final_salary = emp["salary"] - total_deduction
 
-            results.append([
-                name,
-                emp["salary"],
-                present,
-                leaves,
-                total_deduction,
-                final_salary
-            ])
-
+    results.append([
+        name,
+        emp["salary"],
+        present,
+        leaves,
+        total_deduction,
+        final_salary
+    ])
         conn.close()
 
         # ✅ CREATE EXCEL IN MEMORY
