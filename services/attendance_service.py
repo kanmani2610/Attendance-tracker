@@ -1,5 +1,6 @@
 from database import get_connection
 
+
 def get_attendance(month):
     conn = get_connection()
     cursor = conn.cursor()
@@ -31,18 +32,17 @@ def save_attendance(month, employees, form_data):
 
     for emp in employees:
         name = emp["name"]
+
+        # 🔥 IMPORTANT: matches HTML input name
         days = form_data.getlist(name + "[]")
 
         for i, status in enumerate(days):
-            if status:
+            # ✅ only save valid values
+            if status in ["P", "L"]:
                 cursor.execute(
                     "INSERT INTO attendance (name, month, day, status) VALUES (?, ?, ?, ?)",
                     (name, month, i + 1, status)
                 )
 
     conn.commit()
-<<<<<<< HEAD
     conn.close()
-=======
-    conn.close()
->>>>>>> 6308753b0c182742fd7eb5b09eef92abd1f6b596
