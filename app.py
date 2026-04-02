@@ -15,7 +15,7 @@ from services.attendance_service import get_attendance, save_attendance
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-secret")
 
-# ✅ VERY IMPORTANT
+# ✅ IMPORTANT
 init_db()
 
 
@@ -111,14 +111,14 @@ def delete_employee_route(id):
     return redirect("/dashboard")
 
 
-# 📊 REPORT (FIXED)
+# 📊 REPORT (✅ FULLY FIXED)
 @app.route("/report", methods=["GET", "POST"])
 @login_required
 def report():
     employees = load_employees()
 
     if request.method == "POST":
-        month = request.form["month"]
+        month = request.form["month"].lower()
         deduction = float(request.form["deduction"])
 
         conn = get_connection()
@@ -127,11 +127,13 @@ def report():
         results = []
 
         for emp in employees:
+            emp_id = emp["id"]
             name = emp["name"]
 
+            # ✅ FIXED QUERY (uses employee_id + date)
             cursor.execute(
-                "SELECT status FROM attendance WHERE name=? AND month=?",
-                (name, month)
+                "SELECT status FROM attendance WHERE employee_id=? AND LOWER(date) LIKE ?",
+                (emp_id, f"%{month}%")
             )
 
             rows = cursor.fetchall()
@@ -154,11 +156,11 @@ def report():
 
         conn.close()
 
+        # ✅ CREATE EXCEL IN MEMORY
         report_df = pd.DataFrame(results, columns=[
             "Name", "Salary", "Present", "Leaves", "Deduction", "Final Salary"
         ])
 
-        # ✅ MEMORY FILE (BEST FOR RENDER)
         output = io.BytesIO()
         report_df.to_excel(output, index=False)
         output.seek(0)
