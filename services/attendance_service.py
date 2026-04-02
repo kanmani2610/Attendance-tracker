@@ -5,19 +5,26 @@ def get_attendance(month):
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT name, day, status FROM attendance WHERE month = ?",
-        (month,)
-    )
+    # ✅ JOIN with employees to get name
+    cursor.execute("""
+        SELECT e.name, a.date, a.status
+        FROM attendance a
+        JOIN employees e ON a.employee_id = e.id
+        WHERE LOWER(a.date) LIKE ?
+    """, (f"%{month.lower()}%",))
 
     rows = cursor.fetchall()
     conn.close()
 
     data = {}
 
-    for name, day, status in rows:
+    for name, date, status in rows:
+        # extract day from date (format: "january-5")
+        day = int(date.split("-")[1])
+
         if name not in data:
-            data[name] = [""] * 30
+            data[name] = [""] * 31  # max days
+
         data[name][day - 1] = status
 
     return data
@@ -27,22 +34,23 @@ def save_attendance(month, employees, form_data):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # delete old month data
-    cursor.execute("DELETE FROM attendance WHERE month = ?", (month,))
+    # ❌ REMOVE old delete (wrong structure)
+    cursor.execute("DELETE FROM attendance")
 
     for emp in employees:
+        emp_id = emp["id"]
         name = emp["name"]
 
-        # 🔥 IMPORTANT: matches HTML input name
         days = form_data.getlist(name + "[]")
 
         for i, status in enumerate(days):
-            # ✅ only save valid values
             if status in ["P", "L"]:
-                cursor.execute(
-                    "INSERT INTO attendance (name, month, day, status) VALUES (?, ?, ?, ?)",
-                    (name, month, i + 1, status)
-                )
+                date = f"{month.lower()}-{i+1}"
+
+                cursor.execute("""
+                    INSERT OR REPLACE INTO attendance (employee_id, date, status)
+                    VALUES (?, ?, ?)
+                """, (emp_id, date, status))
 
     conn.commit()
     conn.close()
