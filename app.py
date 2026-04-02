@@ -111,7 +111,6 @@ def delete_employee_route(id):
     return redirect("/dashboard")
 
 
-# 📊 REPORT (✅ FULLY FIXED)
 @app.route("/report", methods=["GET", "POST"])
 @login_required
 def report():
@@ -126,31 +125,33 @@ def report():
 
         results = []
 
+        # ✅ FIXED LOOP INDENTATION
         for emp in employees:
-    name = emp["name"]
+            name = emp["name"]
 
-    cursor.execute(
-        "SELECT status FROM attendance WHERE name=? AND month=?",
-        (name, month)
-    )
+            cursor.execute(
+                "SELECT status FROM attendance WHERE name=? AND month=?",
+                (name, month)
+            )
 
-    rows = cursor.fetchall()
-    attendance = [r[0] for r in rows]
+            rows = cursor.fetchall()
+            attendance = [r[0] for r in rows]
 
-    leaves = attendance.count("L")
-    present = attendance.count("P")
+            leaves = attendance.count("L")
+            present = attendance.count("P")
 
-    total_deduction = leaves * deduction
-    final_salary = emp["salary"] - total_deduction
+            total_deduction = leaves * deduction
+            final_salary = emp["salary"] - total_deduction
 
-    results.append([
-        name,
-        emp["salary"],
-        present,
-        leaves,
-        total_deduction,
-        final_salary
-    ])
+            results.append([
+                name,
+                emp["salary"],
+                present,
+                leaves,
+                total_deduction,
+                final_salary
+            ])
+
         conn.close()
 
         # ✅ CREATE EXCEL IN MEMORY
@@ -169,7 +170,6 @@ def report():
         )
 
     return render_template("report.html")
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
