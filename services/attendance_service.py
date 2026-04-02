@@ -41,4 +41,8 @@ def save_attendance(month, employees, form_data):
                 )
 
     conn.commit()
+<<<<<<< HEAD
     conn.close()
+=======
+    conn.close()
+>>>>>>> 6308753b0c182742fd7eb5b09eef92abd1f6b596

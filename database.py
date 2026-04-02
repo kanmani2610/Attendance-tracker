@@ -1,11 +1,12 @@
 import sqlite3
+import os
 
-DB_NAME = "database.db"
-
+# ✅ FIXED PATH FOR RENDER
+DB_NAME = os.path.join(os.getcwd(), "database.db")
 
 def get_connection():
     conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row  # ✅ allows dict-like access
+    conn.row_factory = sqlite3.Row
     return conn
 
 
@@ -13,7 +14,7 @@ def init_db():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ✅ EMPLOYEES TABLE (with constraints)
+    # EMPLOYEES TABLE
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,14 +23,13 @@ def init_db():
         )
     """)
 
-    # ✅ ATTENDANCE TABLE (IMPROVED DESIGN)
+    # ATTENDANCE TABLE
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS attendance (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             employee_id INTEGER NOT NULL,
             date TEXT NOT NULL,
             status TEXT CHECK(status IN ('P', 'L')),
-
             FOREIGN KEY(employee_id) REFERENCES employees(id) ON DELETE CASCADE,
             UNIQUE(employee_id, date)
         )

@@ -43,4 +43,8 @@ def delete_employee(emp_id):
 
     cursor.execute("DELETE FROM employees WHERE id = ?", (emp_id,))
     conn.commit()
+<<<<<<< HEAD
     conn.close()
+=======
+    conn.close()
+>>>>>>> 6308753b0c182742fd7eb5b09eef92abd1f6b596
