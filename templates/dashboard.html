@@ -58,22 +58,23 @@
 
     {% set selected_month = selected_month | trim | lower %}
 
-{% set month_days = {
-    "january": 31,
-    "february": 28,
-    "march": 31,
-    "april": 30,
-    "may": 31,
-    "june": 30,
-    "july": 31,
-    "august": 31,
-    "september": 30,
-    "october": 31,
-    "november": 30,
-    "december": 31
-} %}
+    {% set month_days = {
+        "january": 31,
+        "february": 28,
+        "march": 31,
+        "april": 30,
+        "may": 31,
+        "june": 30,
+        "july": 31,
+        "august": 31,
+        "september": 30,
+        "october": 31,
+        "november": 30,
+        "december": 31
+    } %}
 
-{% set total_days = month_days[selected_month] if selected_month in month_days else 30 %}
+    {% set total_days = month_days[selected_month] if selected_month in month_days else 30 %}
+
     <!-- 📅 ATTENDANCE FORM -->
     <form method="POST">
         <input type="hidden" name="month" value="{{ selected_month }}">
@@ -94,29 +95,32 @@
                     {% for emp in employees %}
                     <tr>
                         <td>
-    <strong>{{ emp.name }}</strong><br>
-    <a href="/delete/{{ emp.id }}"
-       onclick="return confirm('Delete this employee?')"
-       class="btn btn-danger btn-sm mt-1">
-       Remove
-    </a>
-</td>
+                            <strong>{{ emp.name }}</strong><br>
+                            <a href="/delete/{{ emp.id }}"
+                               onclick="return confirm('Delete this employee?')"
+                               class="btn btn-danger btn-sm mt-1">
+                               Remove
+                            </a>
+                        </td>
 
                         {% for i in range(1, total_days + 1) %}
                         {% set val = attendance_data.get(emp.name, [])[i-1] if attendance_data.get(emp.name) and attendance_data.get(emp.name)|length >= i else '' %}
 
                         <td>
+                            <!-- ✅ FIXED VALUE -->
                             <input type="hidden"
                                    name="{{ emp.name }}[]"
-                                   value="{{ val }}"
+                                   value="{{ val or '' }}"
                                    id="{{ emp.name }}_{{ i }}">
 
+                            <!-- P BUTTON -->
                             <button type="button"
                                 class="btn w-100 {% if val == 'P' %}btn-success{% else %}btn-outline-success{% endif %}"
                                 onclick="setAttendance('{{ emp.name }}_{{ i }}', this, 'P')">
                                 P
                             </button>
 
+                            <!-- L BUTTON -->
                             <button type="button"
                                 class="btn w-100 mt-1 {% if val == 'L' %}btn-danger{% else %}btn-outline-danger{% endif %}"
                                 onclick="setAttendance('{{ emp.name }}_{{ i }}', this, 'L')">
@@ -141,6 +145,8 @@
 <script>
 function setAttendance(id, btn, value) {
     const input = document.getElementById(id);
+
+    // ✅ FORCE UPDATE VALUE
     input.value = value;
 
     const cell = btn.parentElement;
@@ -158,12 +164,11 @@ function setAttendance(id, btn, value) {
         btn.classList.remove("btn-outline-secondary");
         btn.classList.add("btn-danger");
     }
+
+    // 🔥 DEBUG (optional)
+    console.log(id, value);
 }
 </script>
 
 </body>
-<<<<<<< HEAD
 </html>
-=======
-</html>
->>>>>>> 6308753b0c182742fd7eb5b09eef92abd1f6b596
