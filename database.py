@@ -1,7 +1,6 @@
 import sqlite3
 import os
 
-# ✅ FIXED PATH (works on Render + local)
 DB_NAME = os.path.join(os.getcwd(), "database.db")
 
 
@@ -15,7 +14,7 @@ def init_db():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ✅ EMPLOYEES TABLE
+    # EMPLOYEES
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,14 +23,15 @@ def init_db():
         )
     """)
 
-    # ✅ ATTENDANCE TABLE (MATCHES YOUR APP)
+    # ✅ FIXED ATTENDANCE TABLE
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS attendance (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            month TEXT,
-            day INTEGER,
-            status TEXT
+            employee_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            status TEXT CHECK(status IN ('P', 'L')),
+            FOREIGN KEY(employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+            UNIQUE(employee_id, date)
         )
     """)
 

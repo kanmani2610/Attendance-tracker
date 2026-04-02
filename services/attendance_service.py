@@ -34,8 +34,11 @@ def save_attendance(month, employees, form_data):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ❌ REMOVE old delete (wrong structure)
-    cursor.execute("DELETE FROM attendance")
+    # ✅ delete only selected month
+    cursor.execute(
+        "DELETE FROM attendance WHERE date LIKE ?",
+        (f"{month.lower()}%",)
+    )
 
     for emp in employees:
         emp_id = emp["id"]
