@@ -127,32 +127,33 @@ def report():
             results = []
 
             for emp in employees:
-    emp_id = emp["id"]
-    name = emp["name"]
+                emp_id = emp["id"]
+                name = emp["name"]
 
-    cursor.execute(
-        "SELECT status FROM attendance WHERE id=? AND month=?",
-        (emp_id, month)
-    )
+                cursor.execute("""
+                    SELECT status
+                    FROM attendance
+                    WHERE employee_id=? AND LOWER(date) LIKE ?
+                """, (emp_id, f"%{month}%"))
 
-    rows = cursor.fetchall()
-    attendance = [r[0] for r in rows]
+                rows = cursor.fetchall()
+                attendance = [r[0] for r in rows]
 
-    leaves = attendance.count("L")
-    present = attendance.count("P")
+                leaves = attendance.count("L")
+                present = attendance.count("P")
 
-    salary = float(emp["salary"])
-    total_deduction = leaves * deduction
-    final_salary = salary - total_deduction
+                salary = float(emp["salary"])
+                total_deduction = leaves * deduction
+                final_salary = salary - total_deduction
 
-    results.append([
-        name,
-        salary,
-        present,
-        leaves,
-        total_deduction,
-        final_salary
-    ])
+                results.append([
+                    name,
+                    salary,
+                    present,
+                    leaves,
+                    total_deduction,
+                    final_salary
+                ])
 
             conn.close()
 
