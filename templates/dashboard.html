@@ -1,158 +1,436 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — BK Agencies</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        th, td {
-            min-width: 60px;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #1a0a14;
+            --surface: #251020;
+            --surface2: #2e1428;
+            --border: #4a1a38;
+            --accent: #ff4d8d;
+            --accent2: #ff80b5;
+            --present: #22c55e;
+            --leave: #ef4444;
+            --text: #fdf0f5;
+            --muted: #b06080;
+            --input-bg: #160a10;
+        }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* NAV */
+        nav {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-logo span {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        .nav-right { display: flex; gap: 10px; align-items: center; }
+        .btn-nav {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger-soft {
+            background: rgba(239,68,68,0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+        .btn-danger-soft:hover { background: rgba(239,68,68,0.2); }
+
+        main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+        .top-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 640px) { .top-row { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+        }
+        .card-title {
+            font-family: 'Syne', sans-serif;
             font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 16px;
         }
 
-        @media (max-width: 768px) {
-            th, td {
-                min-width: 50px;
-                font-size: 10px;
-            }
+        .add-form { display: flex; gap: 10px; flex-wrap: wrap; }
+        .add-form input {
+            flex: 1;
+            min-width: 120px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .add-form input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(255,77,141,0.1);
+        }
+        .add-form input::placeholder { color: var(--muted); }
+
+        .btn-accent {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 20px;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            box-shadow: 0 2px 12px rgba(255,77,141,0.25);
+        }
+        .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(255,77,141,0.4); }
+
+        .month-form { display: flex; gap: 10px; }
+        input[type="month"] {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="month"]:focus { border-color: var(--accent); }
+
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .table-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: var(--surface2);
+        }
+        .table-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
         }
 
-        button {
-            font-size: 10px;
-            padding: 2px;
+        .table-scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        thead tr { background: var(--surface2); }
+        th {
+            padding: 10px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
         }
+        th:first-child { text-align: left; padding-left: 20px; min-width: 140px; }
+        td {
+            padding: 10px 6px;
+            border-bottom: 1px solid rgba(74,26,56,0.5);
+            text-align: center;
+            vertical-align: middle;
+        }
+        td:first-child { padding-left: 20px; text-align: left; }
+        tbody tr:hover { background: rgba(255,77,141,0.03); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .emp-name { font-weight: 500; font-size: 14px; display: block; }
+        .btn-remove {
+            background: transparent;
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #ef4444;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 4px;
+            transition: all 0.2s;
+        }
+        .btn-remove:hover { background: rgba(239,68,68,0.1); }
+
+        .att-cell { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+        .att-btn {
+            width: 32px; height: 26px;
+            border: 1px solid;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: 'Syne', sans-serif;
+        }
+        .att-btn.p-btn {
+            border-color: rgba(34,197,94,0.3);
+            background: transparent;
+            color: rgba(34,197,94,0.5);
+        }
+        .att-btn.p-btn.active, .att-btn.p-btn:hover {
+            background: var(--present);
+            border-color: var(--present);
+            color: #fff;
+        }
+        .att-btn.l-btn {
+            border-color: rgba(239,68,68,0.3);
+            background: transparent;
+            color: rgba(239,68,68,0.5);
+        }
+        .att-btn.l-btn.active, .att-btn.l-btn:hover {
+            background: var(--leave);
+            border-color: var(--leave);
+            color: #fff;
+        }
+
+        .save-bar {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+        .btn-save {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 18px rgba(255,77,141,0.3);
+        }
+        .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255,77,141,0.45); }
+
+        .btn-report {
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 12px;
+            padding: 14px;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .btn-report:hover { border-color: var(--accent); color: var(--accent); }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+        .empty-state p { font-size: 14px; margin-top: 8px; }
     </style>
 </head>
+<body>
 
-<body class="bg-light">
-
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-center">📅 Attendance Dashboard</h2>
-        <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+<nav>
+    <div class="nav-logo">
+        <span>📋</span> AttendPro
     </div>
+    <div class="nav-right">
+        <a href="/report" class="btn-nav btn-outline">📊 Report</a>
+        <a href="/logout" class="btn-nav btn-danger-soft">Logout</a>
+    </div>
+</nav>
 
-    <!-- ➕ ADD EMPLOYEE -->
-    <form method="POST" action="/add" class="mb-3 d-flex gap-2">
-        <input class="form-control" name="name" placeholder="Employee Name" required>
-        <input class="form-control" name="salary" placeholder="Salary" required>
-        <button class="btn btn-primary btn-sm">Add</button>
-    </form>
+<main>
+    <div class="top-row">
+        <div class="card">
+            <div class="card-title">➕ Add Employee</div>
+            <form method="POST" action="/add" class="add-form">
+                <input name="name" placeholder="Employee name" required>
+                <input name="salary" placeholder="Salary (₹)" type="number" min="1" required>
+                <button type="submit" class="btn-accent">Add</button>
+            </form>
+        </div>
 
-    <!-- ✅ FIX: use input type="month" so format is "2025-01" not "January" -->
-    <form method="GET" action="/dashboard" class="mb-3 d-flex gap-2">
-        <input type="month" class="form-control" name="month"
-               value="{{ selected_month }}" required>
-        <button class="btn btn-primary">Load</button>
-    </form>
+        <div class="card">
+            <div class="card-title">📅 Select Month</div>
+            <form method="GET" action="/dashboard" class="month-form">
+                <input type="month" name="month" value="{{ selected_month }}" required>
+                <button type="submit" class="btn-accent">Load</button>
+            </form>
+        </div>
+    </div>
 
     {% if selected_month %}
 
     {% set year = selected_month.split('-')[0] | int %}
     {% set month_num = selected_month.split('-')[1] | int %}
-
-    {% set days_in_month = {
-        1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
-        7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
-    } %}
-
-    {# Handle leap year for February #}
+    {% set days_in_month = {1:31,2:28,3:31,4:30,5:31,6:30,7:31,8:31,9:30,10:31,11:30,12:31} %}
     {% if month_num == 2 and (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)) %}
         {% set total_days = 29 %}
     {% else %}
         {% set total_days = days_in_month[month_num] %}
     {% endif %}
 
-    <!-- 📅 ATTENDANCE FORM -->
     <form method="POST">
         <input type="hidden" name="month" value="{{ selected_month }}">
 
-        <div class="table-responsive">
-            <table class="table table-bordered text-center align-middle">
+        <div class="table-card">
+            <div class="table-header">
+                <h2>Attendance — {{ selected_month }}</h2>
+                <div style="font-size:12px; color:var(--muted);">
+                    <span style="color:var(--present);">● P</span> Present &nbsp;
+                    <span style="color:var(--leave);">● L</span> Leave
+                </div>
+            </div>
 
-                <thead class="table-dark">
-                    <tr>
-                        <th style="min-width:140px;">Employee</th>
-                        {% for i in range(1, total_days + 1) %}
-                            <th>Day {{i}}</th>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            {% for i in range(1, total_days + 1) %}
+                            <th>{{ i }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employees %}
+                        <tr>
+                            <td>
+                                <span class="emp-name">{{ emp.name }}</span>
+                                <a href="/delete/{{ emp.id }}"
+                                   onclick="return confirm('Remove {{ emp.name }}?')"
+                                   class="btn-remove">remove</a>
+                            </td>
+                            {% for i in range(1, total_days + 1) %}
+                            {% set val = attendance_data.get(emp.name, [])[i-1] if attendance_data.get(emp.name) and attendance_data.get(emp.name)|length >= i else '' %}
+                            <td>
+                                <input type="hidden"
+                                       name="{{ emp.name }}[]"
+                                       value="{{ val or '' }}"
+                                       id="{{ emp.name }}_{{ i }}">
+                                <div class="att-cell">
+                                    <button type="button"
+                                        class="att-btn p-btn {% if val == 'P' %}active{% endif %}"
+                                        onclick="setAtt('{{ emp.name }}_{{ i }}', this, 'P')">P</button>
+                                    <button type="button"
+                                        class="att-btn l-btn {% if val == 'L' %}active{% endif %}"
+                                        onclick="setAtt('{{ emp.name }}_{{ i }}', this, 'L')">L</button>
+                                </div>
+                            </td>
+                            {% endfor %}
+                        </tr>
                         {% endfor %}
-                    </tr>
-                </thead>
 
-                <tbody>
-                    {% for emp in employees %}
-                    <tr>
-                        <td>
-                            <strong>{{ emp.name }}</strong><br>
-                            <a href="/delete/{{ emp.id }}"
-                               onclick="return confirm('Delete this employee?')"
-                               class="btn btn-danger btn-sm mt-1">
-                               Remove
-                            </a>
-                        </td>
+                        {% if not employees %}
+                        <tr>
+                            <td colspan="32">
+                                <div class="empty-state">
+                                    <div style="font-size:32px;">👥</div>
+                                    <p>No employees yet. Add one above!</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
 
-                        {% for i in range(1, total_days + 1) %}
-                        {% set val = attendance_data.get(emp.name, [])[i-1] if attendance_data.get(emp.name) and attendance_data.get(emp.name)|length >= i else '' %}
-
-                        <td>
-                            <input type="hidden"
-                                   name="{{ emp.name }}[]"
-                                   value="{{ val or '' }}"
-                                   id="{{ emp.name }}_{{ i }}">
-
-                            <!-- P BUTTON -->
-                            <button type="button"
-                                class="btn w-100 {% if val == 'P' %}btn-success{% else %}btn-outline-success{% endif %}"
-                                onclick="setAttendance('{{ emp.name }}_{{ i }}', this, 'P')">
-                                P
-                            </button>
-
-                            <!-- L BUTTON -->
-                            <button type="button"
-                                class="btn w-100 mt-1 {% if val == 'L' %}btn-danger{% else %}btn-outline-danger{% endif %}"
-                                onclick="setAttendance('{{ emp.name }}_{{ i }}', this, 'L')">
-                                L
-                            </button>
-                        </td>
-
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-
-            </table>
+            <div class="save-bar">
+                <button type="submit" class="btn-save">💾 Save Attendance</button>
+            </div>
         </div>
-
-        <button class="btn btn-success w-100 mt-3">💾 Save Attendance</button>
     </form>
 
+    {% else %}
+    <div class="table-card">
+        <div class="empty-state">
+            <div style="font-size:40px;">📅</div>
+            <p>Select a month above to view and mark attendance</p>
+        </div>
+    </div>
     {% endif %}
 
-    <a href="/report" class="btn btn-dark mt-3 w-100">📊 Go to Report</a>
-</div>
+    <a href="/report" class="btn-report">📊 Generate Salary Report</a>
+</main>
 
 <script>
-function setAttendance(id, btn, value) {
+function setAtt(id, btn, value) {
     const input = document.getElementById(id);
     input.value = value;
-
-    const cell = btn.parentElement;
-    const buttons = cell.querySelectorAll("button");
-
-    buttons.forEach(b => {
-        b.classList.remove("btn-success", "btn-danger");
-        b.classList.add("btn-outline-secondary");
-    });
-
-    if (value === "P") {
-        btn.classList.remove("btn-outline-secondary");
-        btn.classList.add("btn-success");
-    } else {
-        btn.classList.remove("btn-outline-secondary");
-        btn.classList.add("btn-danger");
-    }
-
-    console.log(id, value);
+    const cell = btn.closest('.att-cell');
+    cell.querySelectorAll('.att-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
 }
 </script>
 

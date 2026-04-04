@@ -30,7 +30,7 @@ def login_required(f):
 
 
 # 🔐 ADMIN CONFIG
-ADMIN_USER = os.getenv("ADMIN_USER", "kanmani")
+ADMIN_USER = os.getenv("ADMIN_USER", "Kanmani")
 ADMIN_PASS_HASH = os.getenv(
     "ADMIN_PASS_HASH",
     "scrypt:32768:8:1$CAEBIKjycQofVpfR$225a63ebe8c8571ad0c85f6ff9c4a37461c0bae456b0a6edbb64540cc035715f6863cce641b3292f083b507d2c488be8f6cfb2b0ef6912e650ddf0c706a13be5"
