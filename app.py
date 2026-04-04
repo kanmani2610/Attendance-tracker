@@ -114,63 +114,59 @@ def delete_employee_route(id):
 @app.route("/report", methods=["GET", "POST"])
 @login_required
 def report():
-    employees = load_employees()
+    try:
+        employees = load_employees()
 
-    if request.method == "POST":
-        month = request.form["month"].lower()
-        deduction = float(request.form["deduction"])
+        if request.method == "POST":
+            month = request.form.get("month", "").lower()
+            deduction = float(request.form.get("deduction", 0))
 
-        conn = get_connection()
-        cursor = conn.cursor()
+            conn = get_connection()
+            cursor = conn.cursor()
 
-        results = []
+            results = []
 
-        # ✅ FIXED LOOP INDENTATION
-        for emp in employees:
-            name = emp["name"]
+            for emp in employees:
+                name = emp["name"]
 
-            cursor.execute(
-                "SELECT status FROM attendance WHERE name=? AND month=?",
-                (name, month)
-            )
+                cursor.execute(
+                    "SELECT status FROM attendance WHERE name=? AND month=?",
+                    (name, month)
+                )
 
-            rows = cursor.fetchall()
-            attendance = [r[0] for r in rows]
+                rows = cursor.fetchall()
+                attendance = [r[0] for r in rows]
 
-            leaves = attendance.count("L")
-            present = attendance.count("P")
+                leaves = attendance.count("L")
+                present = attendance.count("P")
 
-            total_deduction = leaves * deduction
-            final_salary = emp["salary"] - total_deduction
+                salary = float(emp["salary"])  # FIX
+                total_deduction = leaves * deduction
+                final_salary = salary - total_deduction
 
-            results.append([
-                name,
-                emp["salary"],
-                present,
-                leaves,
-                total_deduction,
-                final_salary
+                results.append([
+                    name,
+                    salary,
+                    present,
+                    leaves,
+                    total_deduction,
+                    final_salary
+                ])
+
+            conn.close()
+
+            report_df = pd.DataFrame(results, columns=[
+                "Name", "Salary", "Present", "Leaves", "Deduction", "Final Salary"
             ])
 
-        conn.close()
+            output = io.BytesIO()
+            report_df.to_excel(output, index=False)
+            output.seek(0)
 
-        # ✅ CREATE EXCEL IN MEMORY
-        report_df = pd.DataFrame(results, columns=[
-            "Name", "Salary", "Present", "Leaves", "Deduction", "Final Salary"
-        ])
+            return send_file(output, download_name="attendance_report.xlsx", as_attachment=True)
 
-        output = io.BytesIO()
-        report_df.to_excel(output, index=False)
-        output.seek(0)
+        return render_template("report.html")
 
-        return send_file(
-            output,
-            download_name="attendance_report.xlsx",
-            as_attachment=True
-        )
-
-    return render_template("report.html")
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    except Exception as e:
+        print("ERROR:", e)
+        return str(e), 500
