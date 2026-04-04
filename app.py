@@ -96,10 +96,15 @@ def add_employee_route():
 
     try:
         salary = int(request.form["salary"])
-    except:
+    except Exception as e:
+        print("Salary error:", e)
         return "Invalid salary input"
 
-    add_employee(name, salary)
+    try:
+        add_employee(name, salary)
+    except ValueError as e:
+        return str(e)
+
     return redirect("/dashboard")
 
 
@@ -111,6 +116,7 @@ def delete_employee_route(id):
     return redirect("/dashboard")
 
 
+# 📊 REPORT
 @app.route("/report", methods=["GET", "POST"])
 @login_required
 def report():
@@ -118,7 +124,9 @@ def report():
         employees = load_employees()
 
         if request.method == "POST":
-            month = request.form.get("month", "").lower()
+            # ✅ FIX: month comes as "2025-01" from HTML input type="month"
+            # Keep it as-is (do NOT .lower() or reformat it)
+            month = request.form.get("month", "").strip()
             deduction = float(request.form.get("deduction", 0))
 
             conn = get_connection()
@@ -130,11 +138,12 @@ def report():
                 emp_id = emp["id"]
                 name = emp["name"]
 
+                # ✅ FIX: match "2025-01-05" style dates using LIKE "2025-01%"
                 cursor.execute("""
                     SELECT status
                     FROM attendance
-                    WHERE employee_id=? AND LOWER(date) LIKE ?
-                """, (emp_id, f"%{month}%"))
+                    WHERE employee_id = ? AND date LIKE ?
+                """, (emp_id, f"{month}%"))
 
                 rows = cursor.fetchall()
                 attendance = [r[0] for r in rows]

@@ -5,13 +5,13 @@ def get_attendance(month):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ✅ JOIN with employees to get name
+    # ✅ FIX: match ISO dates like "2025-01-05"
     cursor.execute("""
         SELECT e.name, a.date, a.status
         FROM attendance a
         JOIN employees e ON a.employee_id = e.id
-        WHERE LOWER(a.date) LIKE ?
-    """, (f"%{month.lower()}%",))
+        WHERE a.date LIKE ?
+    """, (f"{month}%",))
 
     rows = cursor.fetchall()
     conn.close()
@@ -19,11 +19,14 @@ def get_attendance(month):
     data = {}
 
     for name, date, status in rows:
-        # extract day from date (format: "january-5")
-        day = int(date.split("-")[1])
+        # ✅ FIX: date is "2025-01-05", day is the 3rd part
+        parts = date.split("-")
+        if len(parts) < 3:
+            continue
+        day = int(parts[2])
 
         if name not in data:
-            data[name] = [""] * 31  # max days
+            data[name] = [""] * 31
 
         data[name][day - 1] = status
 
@@ -34,10 +37,10 @@ def save_attendance(month, employees, form_data):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ✅ delete only selected month
+    # ✅ FIX: delete only this month's records
     cursor.execute(
         "DELETE FROM attendance WHERE date LIKE ?",
-        (f"{month.lower()}%",)
+        (f"{month}%",)
     )
 
     for emp in employees:
@@ -48,7 +51,8 @@ def save_attendance(month, employees, form_data):
 
         for i, status in enumerate(days):
             if status in ["P", "L"]:
-                date = f"{month.lower()}-{i+1}"
+                # ✅ FIX: store as "2025-01-05" ISO format
+                date = f"{month}-{i+1:02d}"
 
                 cursor.execute("""
                     INSERT OR REPLACE INTO attendance (employee_id, date, status)

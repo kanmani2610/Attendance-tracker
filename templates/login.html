@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,22 +9,19 @@
 
 <div class="card p-4 shadow" style="width:350px;">
     <h3 class="text-center mb-3">🔐 Admin Login</h3>
-{% if error %}
-<div class="alert alert-danger text-center">
-    {{ error }}
-</div>
-{% endif %}
+
+    {% if error %}
+    <div class="alert alert-danger text-center">
+        {{ error }}
+    </div>
+    {% endif %}
+
     <form method="POST">
         <input class="form-control mb-3" name="username" placeholder="Username" required>
         <input class="form-control mb-3" type="password" name="password" placeholder="Password" required>
-
         <button class="btn btn-primary w-100">Login</button>
     </form>
 </div>
 
 </body>
-<<<<<<< HEAD
 </html>
-=======
-</html>
->>>>>>> 6308753b0c182742fd7eb5b09eef92abd1f6b596

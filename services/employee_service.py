@@ -30,9 +30,9 @@ def add_employee(name, salary):
             (name.strip(), int(salary))
         )
         conn.commit()
-    except:
+    except Exception as e:
         conn.rollback()
-        raise ValueError("Employee already exists or invalid data")
+        raise ValueError(f"Employee already exists or invalid data: {e}")
     finally:
         conn.close()
 

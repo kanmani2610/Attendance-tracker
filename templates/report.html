@@ -8,45 +8,25 @@
 <body class="bg-light">
 
 <div class="container mt-4">
-    <h2 class="text-center mb-4">📊 Salary Report</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 Salary Report</h2>
+        <a href="/dashboard" class="btn btn-outline-secondary btn-sm">← Back</a>
+    </div>
 
+    <!-- ✅ FIX: use input type="month" so format matches "2025-01" in DB -->
     <form method="POST" class="card p-3 shadow mb-4">
-        <input class="form-control mb-2" name="month" placeholder="Month" required>
-        <input class="form-control mb-2" name="deduction" placeholder="Deduction per Leave" required>
-        <button class="btn btn-primary">Generate Report</button>
+        <label class="form-label fw-bold">Select Month</label>
+        <input type="month" class="form-control mb-2" name="month" required>
+
+        <label class="form-label fw-bold">Deduction per Leave (₹)</label>
+        <input type="number" class="form-control mb-2" name="deduction"
+               placeholder="e.g. 500" min="0" required>
+
+        <button class="btn btn-primary">⬇ Generate & Download Excel</button>
     </form>
 
-    {% if results %}
-    <div class="card shadow p-3">
-        <table class="table table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>Name</th>
-                    <th>Salary</th>
-                    <th>Present</th>
-                    <th>Leaves</th>
-                    <th>Deduction</th>
-                    <th>Final Salary</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for r in results %}
-                <tr>
-                    <td>{{r[0]}}</td>
-                    <td>{{r[1]}}</td>
-                    <td>{{r[2]}}</td>
-                    <td>{{r[3]}}</td>
-                    <td>{{r[4]}}</td>
-                    <td>{{r[5]}}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <a href="/download" class="btn btn-success mt-2">⬇ Download Excel</a>
-    </div>
-    {% endif %}
+    <p class="text-muted text-center">The report will download as an Excel file automatically.</p>
 </div>
 
 </body>
+</html>

@@ -27,7 +27,10 @@
 <body class="bg-light">
 
 <div class="container-fluid mt-4">
-    <h2 class="text-center mb-4">📅 Attendance Dashboard</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-center">📅 Attendance Dashboard</h2>
+        <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+    </div>
 
     <!-- ➕ ADD EMPLOYEE -->
     <form method="POST" action="/add" class="mb-3 d-flex gap-2">
@@ -36,44 +39,29 @@
         <button class="btn btn-primary btn-sm">Add</button>
     </form>
 
-    <!-- 🔥 MONTH DROPDOWN -->
+    <!-- ✅ FIX: use input type="month" so format is "2025-01" not "January" -->
     <form method="GET" action="/dashboard" class="mb-3 d-flex gap-2">
-        <select class="form-control" name="month" required>
-            <option value="">Select Month</option>
-
-            {% set months = [
-                "January","February","March","April","May","June",
-                "July","August","September","October","November","December"
-            ] %}
-
-            {% for m in months %}
-                <option value="{{ m }}" {% if selected_month == m %}selected{% endif %}>
-                    {{ m }}
-                </option>
-            {% endfor %}
-        </select>
-
+        <input type="month" class="form-control" name="month"
+               value="{{ selected_month }}" required>
         <button class="btn btn-primary">Load</button>
     </form>
 
-    {% set selected_month = selected_month | trim | lower %}
+    {% if selected_month %}
 
-    {% set month_days = {
-        "january": 31,
-        "february": 28,
-        "march": 31,
-        "april": 30,
-        "may": 31,
-        "june": 30,
-        "july": 31,
-        "august": 31,
-        "september": 30,
-        "october": 31,
-        "november": 30,
-        "december": 31
+    {% set year = selected_month.split('-')[0] | int %}
+    {% set month_num = selected_month.split('-')[1] | int %}
+
+    {% set days_in_month = {
+        1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
+        7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
     } %}
 
-    {% set total_days = month_days[selected_month] if selected_month in month_days else 30 %}
+    {# Handle leap year for February #}
+    {% if month_num == 2 and (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)) %}
+        {% set total_days = 29 %}
+    {% else %}
+        {% set total_days = days_in_month[month_num] %}
+    {% endif %}
 
     <!-- 📅 ATTENDANCE FORM -->
     <form method="POST">
@@ -107,7 +95,6 @@
                         {% set val = attendance_data.get(emp.name, [])[i-1] if attendance_data.get(emp.name) and attendance_data.get(emp.name)|length >= i else '' %}
 
                         <td>
-                            <!-- ✅ FIXED VALUE -->
                             <input type="hidden"
                                    name="{{ emp.name }}[]"
                                    value="{{ val or '' }}"
@@ -139,14 +126,14 @@
         <button class="btn btn-success w-100 mt-3">💾 Save Attendance</button>
     </form>
 
+    {% endif %}
+
     <a href="/report" class="btn btn-dark mt-3 w-100">📊 Go to Report</a>
 </div>
 
 <script>
 function setAttendance(id, btn, value) {
     const input = document.getElementById(id);
-
-    // ✅ FORCE UPDATE VALUE
     input.value = value;
 
     const cell = btn.parentElement;
@@ -165,7 +152,6 @@ function setAttendance(id, btn, value) {
         btn.classList.add("btn-danger");
     }
 
-    // 🔥 DEBUG (optional)
     console.log(id, value);
 }
 </script>
