@@ -19,6 +19,7 @@
             --text: #fdf0f5;
             --muted: #b06080;
             --input-bg: #160a10;
+            --sunday: #1e1018;
         }
         body {
             font-family: 'DM Sans', sans-serif;
@@ -27,7 +28,6 @@
             min-height: 100vh;
         }
 
-        /* NAV */
         nav {
             background: var(--surface);
             border-bottom: 1px solid var(--border);
@@ -80,6 +80,13 @@
             border: 1px solid rgba(239,68,68,0.2);
         }
         .btn-danger-soft:hover { background: rgba(239,68,68,0.2); }
+        .btn-weekly {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            border: none;
+            box-shadow: 0 2px 10px rgba(255,77,141,0.3);
+        }
+        .btn-weekly:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,77,141,0.4); }
 
         main { padding: 24px; max-width: 1400px; margin: 0 auto; }
 
@@ -119,12 +126,9 @@
             font-family: 'DM Sans', sans-serif;
             font-size: 14px;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s;
         }
-        .add-form input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(255,77,141,0.1);
-        }
+        .add-form input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,77,141,0.1); }
         .add-form input::placeholder { color: var(--muted); }
 
         .btn-accent {
@@ -141,7 +145,7 @@
             white-space: nowrap;
             box-shadow: 0 2px 12px rgba(255,77,141,0.25);
         }
-        .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(255,77,141,0.4); }
+        .btn-accent:hover { transform: translateY(-1px); }
 
         .month-form { display: flex; gap: 10px; }
         input[type="month"] {
@@ -188,13 +192,14 @@
             padding: 10px 8px;
             font-size: 11px;
             font-weight: 600;
-            letter-spacing: 0.5px;
             color: var(--muted);
             text-align: center;
             border-bottom: 1px solid var(--border);
             white-space: nowrap;
         }
         th:first-child { text-align: left; padding-left: 20px; min-width: 140px; }
+        th.sunday-header { color: #4a1a38; background: var(--sunday); }
+
         td {
             padding: 10px 6px;
             border-bottom: 1px solid rgba(74,26,56,0.5);
@@ -202,6 +207,11 @@
             vertical-align: middle;
         }
         td:first-child { padding-left: 20px; text-align: left; }
+        td.sunday-cell {
+            background: var(--sunday);
+            color: #4a1a38;
+            font-size: 16px;
+        }
         tbody tr:hover { background: rgba(255,77,141,0.03); }
         tbody tr:last-child td { border-bottom: none; }
 
@@ -274,15 +284,20 @@
             transition: all 0.2s;
             box-shadow: 0 4px 18px rgba(255,77,141,0.3);
         }
-        .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255,77,141,0.45); }
+        .btn-save:hover { transform: translateY(-1px); }
 
-        .btn-report {
+        .bottom-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 480px) { .bottom-btns { grid-template-columns: 1fr; } }
+
+        .btn-bottom {
             display: block;
             text-align: center;
             text-decoration: none;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text);
             border-radius: 12px;
             padding: 14px;
             font-family: 'Syne', sans-serif;
@@ -292,19 +307,49 @@
             text-transform: uppercase;
             transition: all 0.2s;
         }
+        .btn-report {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
         .btn-report:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-weekly-bottom {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 16px rgba(255,77,141,0.3);
+        }
+        .btn-weekly-bottom:hover { transform: translateY(-1px); }
 
         .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
         .empty-state p { font-size: 14px; margin-top: 8px; }
+
+        /* Sunday legend */
+        .legend {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--muted);
+            align-items: center;
+        }
+        .legend-sunday {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .sunday-dot {
+            width: 10px; height: 10px;
+            background: #4a1a38;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body>
 
 <nav>
-    <div class="nav-logo">
-        <span>📋</span> BK Agencies
-    </div>
+    <div class="nav-logo"><span>📋</span> BK Agencies</div>
     <div class="nav-right">
+        <a href="/weekly" class="btn-nav btn-weekly">💰 Weekly Pay</a>
         <a href="/report" class="btn-nav btn-outline">📊 Report</a>
         <a href="/logout" class="btn-nav btn-danger-soft">Logout</a>
     </div>
@@ -341,15 +386,19 @@
         {% set total_days = days_in_month[month_num] %}
     {% endif %}
 
+    {# Figure out what day of week the 1st falls on (0=Mon ... 6=Sun) #}
+    {# We'll pass sunday info via JS instead #}
+
     <form method="POST">
         <input type="hidden" name="month" value="{{ selected_month }}">
 
         <div class="table-card">
             <div class="table-header">
                 <h2>Attendance — {{ selected_month }}</h2>
-                <div style="font-size:12px; color:var(--muted);">
-                    <span style="color:var(--present);">● P</span> Present &nbsp;
-                    <span style="color:var(--leave);">● L</span> Leave
+                <div class="legend">
+                    <span><span style="color:var(--present);">● P</span> Present</span>
+                    <span><span style="color:var(--leave);">● L</span> Leave</span>
+                    <span class="legend-sunday"><span class="sunday-dot"></span> Sunday (no pay)</span>
                 </div>
             </div>
 
@@ -359,7 +408,10 @@
                         <tr>
                             <th>Employee</th>
                             {% for i in range(1, total_days + 1) %}
-                            <th>{{ i }}</th>
+                            {# Check if this day is Sunday #}
+                            {% set date_str = selected_month + '-' + '%02d'|format(i) %}
+                            {% set is_sunday = (namespace(val=false)) %}
+                            <th class="{{ 'sunday-header' if is_sunday.val else '' }}" id="th-day-{{ i }}">{{ i }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
@@ -374,7 +426,7 @@
                             </td>
                             {% for i in range(1, total_days + 1) %}
                             {% set val = attendance_data.get(emp.name, [])[i-1] if attendance_data.get(emp.name) and attendance_data.get(emp.name)|length >= i else '' %}
-                            <td>
+                            <td class="day-cell" id="cell-{{ emp.name }}-{{ i }}">
                                 <input type="hidden"
                                        name="{{ emp.name }}[]"
                                        value="{{ val or '' }}"
@@ -421,7 +473,11 @@
     </div>
     {% endif %}
 
-    <a href="/report" class="btn-report">📊 Generate Salary Report</a>
+    <div class="bottom-btns">
+        <a href="/report" class="btn-bottom btn-report">📊 Salary Report</a>
+        <a href="/weekly" class="btn-bottom btn-weekly-bottom">💰 Weekly Pay</a>
+    </div>
+
 </main>
 
 <script>
@@ -432,6 +488,33 @@ function setAtt(id, btn, value) {
     cell.querySelectorAll('.att-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 }
+
+// ✅ Grey out Sundays automatically
+document.addEventListener('DOMContentLoaded', function() {
+    const monthInput = "{{ selected_month }}";
+    if (!monthInput) return;
+
+    const [year, month] = monthInput.split('-').map(Number);
+    const headers = document.querySelectorAll('th[id^="th-day-"]');
+
+    headers.forEach(th => {
+        const day = parseInt(th.id.replace('th-day-', ''));
+        const date = new Date(year, month - 1, day);
+        if (date.getDay() === 0) { // Sunday
+            th.classList.add('sunday-header');
+            th.textContent = day + ' ☀';
+
+            // Grey out all cells in this column
+            const cells = document.querySelectorAll(`[id$="-${day}"]`);
+            cells.forEach(cell => {
+                if (cell.classList.contains('day-cell')) {
+                    cell.classList.add('sunday-cell');
+                    cell.innerHTML = '—';
+                }
+            });
+        }
+    });
+});
 </script>
 
 </body>

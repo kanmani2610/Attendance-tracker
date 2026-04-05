@@ -4,19 +4,29 @@ import pandas as pd
 from werkzeug.security import check_password_hash
 from functools import wraps
 import io
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta
 
 # DB
 from database import init_db, get_connection
 
 # SERVICES
 from services.employee_service import load_employees, add_employee, delete_employee
-from services.attendance_service import get_attendance, save_attendance
+from services.attendance_service import get_attendance, save_attendance, get_weekly_attendance
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-secret")
 
 # ✅ IMPORTANT
 init_db()
+
+# 📧 EMAIL CONFIG
+SENDER_EMAIL = "jkanmani691@gmail.com"
+SENDER_PASSWORD = os.environ.get("EMAIL_PASSWORD", "ljbt rhow gmmk oucb")
+RECEIVER_EMAILS = ["jaikumar.197306@gmail.com", "kanmanijayakumar26022007@gmail.com"]
+DAILY_RATE = 100  # ₹100 per day
 
 
 # 🔐 LOGIN DECORATOR
@@ -35,6 +45,74 @@ ADMIN_PASS_HASH = os.getenv(
     "ADMIN_PASS_HASH",
     "scrypt:32768:8:1$CAEBIKjycQofVpfR$225a63ebe8c8571ad0c85f6ff9c4a37461c0bae456b0a6edbb64540cc035715f6863cce641b3292f083b507d2c488be8f6cfb2b0ef6912e650ddf0c706a13be5"
 )
+
+
+# 📧 SEND WEEKLY EMAIL
+def send_weekly_email(week_data, week_label):
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"BK Agencies — Saturday Payment Summary ({week_label})"
+        msg["From"] = SENDER_EMAIL
+        msg["To"] = ", ".join(RECEIVER_EMAILS)
+
+        total = sum(d["amount"] for d in week_data)
+
+        # Build email body
+        rows = ""
+        for d in week_data:
+            rows += f"""
+            <tr>
+                <td style="padding:10px 16px; border-bottom:1px solid #4a1a38;">{d['name']}</td>
+                <td style="padding:10px 16px; border-bottom:1px solid #4a1a38; text-align:center;">{d['days']}</td>
+                <td style="padding:10px 16px; border-bottom:1px solid #4a1a38; text-align:center;">₹{d['amount']}</td>
+            </tr>
+            """
+
+        html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; background:#1a0a14; color:#fdf0f5; padding:20px;">
+            <div style="max-width:500px; margin:0 auto; background:#251020; border-radius:16px; padding:32px; border:1px solid #4a1a38;">
+                <h2 style="color:#ff4d8d; margin-bottom:4px;">BK Agencies</h2>
+                <p style="color:#b06080; margin-bottom:24px;">Saturday Payment Summary — {week_label}</p>
+
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#2e1428;">
+                            <th style="padding:10px 16px; text-align:left; color:#b06080; font-size:12px;">Employee</th>
+                            <th style="padding:10px 16px; text-align:center; color:#b06080; font-size:12px;">Days Present</th>
+                            <th style="padding:10px 16px; text-align:center; color:#b06080; font-size:12px;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows}
+                    </tbody>
+                </table>
+
+                <div style="margin-top:20px; padding:16px; background:#2e1428; border-radius:10px; text-align:right;">
+                    <span style="color:#b06080; font-size:14px;">Total to Pay Today:</span>
+                    <span style="color:#ff4d8d; font-size:22px; font-weight:bold; margin-left:12px;">₹{total}</span>
+                </div>
+
+                <p style="color:#b06080; font-size:12px; margin-top:20px; text-align:center;">
+                    This is an automated message from BK Agencies Attendance System.
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        msg.attach(MIMEText(html, "html"))
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.sendmail(SENDER_EMAIL, RECEIVER_EMAILS, msg.as_string())
+
+        print("✅ Weekly email sent!")
+        return True
+
+    except Exception as e:
+        print(f"❌ Email error: {e}")
+        return False
 
 
 # 🔐 LOGIN
@@ -75,9 +153,7 @@ def dashboard():
     if request.method == "POST":
         month = request.form["month"]
         session["month"] = month
-
         save_attendance(month, employees, request.form)
-
         return redirect(f"/dashboard?month={month}")
 
     return render_template(
@@ -93,7 +169,6 @@ def dashboard():
 @login_required
 def add_employee_route():
     name = request.form["name"]
-
     try:
         salary = int(request.form["salary"])
     except Exception as e:
@@ -124,8 +199,6 @@ def report():
         employees = load_employees()
 
         if request.method == "POST":
-            # ✅ FIX: month comes as "2025-01" from HTML input type="month"
-            # Keep it as-is (do NOT .lower() or reformat it)
             month = request.form.get("month", "").strip()
             deduction = float(request.form.get("deduction", 0))
 
@@ -138,31 +211,30 @@ def report():
                 emp_id = emp["id"]
                 name = emp["name"]
 
-                # ✅ FIX: match "2025-01-05" style dates using LIKE "2025-01%"
                 cursor.execute("""
-                    SELECT status
-                    FROM attendance
-                    WHERE employee_id = ? AND date LIKE ?
+                    SELECT status, date FROM attendance
+                    WHERE employee_id = %s AND date LIKE %s
                 """, (emp_id, f"{month}%"))
 
                 rows = cursor.fetchall()
-                attendance = [r[0] for r in rows]
 
-                leaves = attendance.count("L")
-                present = attendance.count("P")
+                # ✅ Ignore Sundays in monthly report
+                leaves = 0
+                present = 0
+                for status, date in rows:
+                    date_obj = datetime.strptime(date, "%Y-%m-%d")
+                    if date_obj.weekday() == 6:  # Sunday
+                        continue
+                    if status == "L":
+                        leaves += 1
+                    elif status == "P":
+                        present += 1
 
                 salary = float(emp["salary"])
                 total_deduction = leaves * deduction
                 final_salary = salary - total_deduction
 
-                results.append([
-                    name,
-                    salary,
-                    present,
-                    leaves,
-                    total_deduction,
-                    final_salary
-                ])
+                results.append([name, salary, present, leaves, total_deduction, final_salary])
 
             conn.close()
 
@@ -181,3 +253,60 @@ def report():
     except Exception as e:
         print("ERROR:", e)
         return str(e), 500
+
+
+# 📅 WEEKLY SUMMARY
+@app.route("/weekly", methods=["GET", "POST"])
+@login_required
+def weekly():
+    employees = load_employees()
+    today = datetime.today()
+
+    # Default to current week (Mon–Sat)
+    # Find Monday of current week
+    monday = today - timedelta(days=today.weekday())
+    saturday = monday + timedelta(days=5)
+
+    # Allow selecting a different week
+    week_start_str = request.args.get("week_start", monday.strftime("%Y-%m-%d"))
+    week_start = datetime.strptime(week_start_str, "%Y-%m-%d")
+    week_end = week_start + timedelta(days=5)  # Saturday
+
+    week_label = f"{week_start.strftime('%d %b')} – {week_end.strftime('%d %b %Y')}"
+
+    # Get attendance for each employee for this week (Mon-Sat, skip Sunday)
+    week_data = get_weekly_attendance(employees, week_start, week_end)
+
+    # Check if today is Saturday — show email button
+    is_saturday = today.weekday() == 5
+
+    # Check if email already sent today
+    email_sent = session.get("email_sent_date") == today.strftime("%Y-%m-%d")
+
+    # Handle send email
+    if request.method == "POST":
+        success = send_weekly_email(week_data, week_label)
+        if success:
+            session["email_sent_date"] = today.strftime("%Y-%m-%d")
+            return redirect("/weekly?week_start=" + week_start_str + "&email=sent")
+
+    email_status = request.args.get("email")
+
+    # Previous and next week navigation
+    prev_week = (week_start - timedelta(days=7)).strftime("%Y-%m-%d")
+    next_week = (week_start + timedelta(days=7)).strftime("%Y-%m-%d")
+
+    return render_template(
+        "weekly.html",
+        employees=employees,
+        week_data=week_data,
+        week_label=week_label,
+        week_start=week_start_str,
+        prev_week=prev_week,
+        next_week=next_week,
+        is_saturday=is_saturday,
+        email_sent=email_sent,
+        email_status=email_status,
+        daily_rate=DAILY_RATE,
+        total=sum(d["amount"] for d in week_data)
+    )

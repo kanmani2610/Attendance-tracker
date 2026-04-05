@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Pay — BK Agencies</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #1a0a14;
+            --surface: #251020;
+            --surface2: #2e1428;
+            --border: #4a1a38;
+            --accent: #ff4d8d;
+            --accent2: #ff80b5;
+            --present: #22c55e;
+            --leave: #ef4444;
+            --text: #fdf0f5;
+            --muted: #b06080;
+            --input-bg: #160a10;
+        }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px; right: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(255,77,141,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        nav {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-logo span {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        .btn-back {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            transition: all 0.2s;
+        }
+        .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        main { padding: 24px; max-width: 800px; margin: 0 auto; }
+
+        /* WEEK NAVIGATOR */
+        .week-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+        .week-nav a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 20px;
+            padding: 4px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+        .week-nav a:hover { background: var(--surface2); }
+        .week-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+        }
+        .week-sub {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        /* EMAIL BANNER */
+        .email-banner {
+            background: linear-gradient(135deg, rgba(255,77,141,0.15), rgba(255,128,181,0.08));
+            border: 1px solid rgba(255,77,141,0.3);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .email-banner-text { font-size: 14px; }
+        .email-banner-text strong { color: var(--accent); }
+        .btn-send-email {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 12px rgba(255,77,141,0.3);
+        }
+        .btn-send-email:hover { transform: translateY(-1px); }
+
+        .success-banner {
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.3);
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+            color: #22c55e;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* TOTAL CARD */
+        .total-card {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .total-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+        }
+        .total-amount {
+            font-family: 'Syne', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        /* EMPLOYEE CARDS */
+        .emp-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        .emp-card:hover { border-color: rgba(255,77,141,0.3); }
+        .emp-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .emp-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .emp-amount {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+        .emp-days {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        /* DAY PILLS */
+        .days-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .day-pill {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 44px;
+        }
+        .day-name {
+            font-size: 10px;
+            color: var(--muted);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .day-status {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'Syne', sans-serif;
+        }
+        .day-status.present {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.3);
+            color: #22c55e;
+        }
+        .day-status.leave {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #ef4444;
+        }
+        .day-status.empty {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        @media (max-width: 480px) {
+            main { padding: 16px; }
+            .total-amount { font-size: 26px; }
+            .week-label { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo"><span>📋</span> BK Agencies</div>
+    <a href="/dashboard" class="btn-back">← Dashboard</a>
+</nav>
+
+<main>
+    <h2 style="font-family:'Syne',sans-serif; font-size:22px; font-weight:800; margin-bottom:20px;">
+        💰 Weekly Payment
+    </h2>
+
+    <!-- WEEK NAVIGATOR -->
+    <div class="week-nav">
+        <a href="/weekly?week_start={{ prev_week }}">‹</a>
+        <div>
+            <div class="week-label">{{ week_label }}</div>
+            <div class="week-sub">Mon – Sat (Sunday excluded)</div>
+        </div>
+        <a href="/weekly?week_start={{ next_week }}">›</a>
+    </div>
+
+    <!-- SUCCESS MESSAGE -->
+    {% if email_status == 'sent' %}
+    <div class="success-banner">
+        ✅ Payment summary emailed successfully to both emails!
+    </div>
+    {% endif %}
+
+    <!-- SATURDAY EMAIL BANNER -->
+    {% if is_saturday and not email_sent %}
+    <div class="email-banner">
+        <div class="email-banner-text">
+            🔔 <strong>Today is Saturday!</strong> Send weekly payment summary to your dad?
+        </div>
+        <form method="POST">
+            <button type="submit" class="btn-send-email">📧 Send Email Now</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- TOTAL -->
+    <div class="total-card">
+        <div>
+            <div class="total-label">Total to Pay This Week</div>
+            <div class="total-label" style="margin-top:4px;">₹{{ daily_rate }}/day per employee</div>
+        </div>
+        <div class="total-amount">₹{{ total }}</div>
+    </div>
+
+    <!-- EMPLOYEE CARDS -->
+    {% if week_data %}
+        {% for emp in week_data %}
+        <div class="emp-card">
+            <div class="emp-header">
+                <div>
+                    <div class="emp-name">{{ emp.name }}</div>
+                    <div class="emp-days">{{ emp.days }} day{{ 's' if emp.days != 1 }} present</div>
+                </div>
+                <div class="emp-amount">₹{{ emp.amount }}</div>
+            </div>
+
+            <div class="days-row">
+                {% for d in emp.breakdown %}
+                <div class="day-pill">
+                    <span class="day-name">{{ d.day }}</span>
+                    <div class="day-status {% if d.status == 'P' %}present{% elif d.status == 'L' %}leave{% else %}empty{% endif %}">
+                        {% if d.status == 'P' %}P
+                        {% elif d.status == 'L' %}L
+                        {% else %}—{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div style="font-size:40px;">👥</div>
+            <p style="margin-top:8px;">No employees found. Add employees first!</p>
+        </div>
+    {% endif %}
+
+</main>
+
+</body>
+</html>
