@@ -5,21 +5,22 @@ def get_attendance(month):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ✅ FIX: match ISO dates like "2025-01-05"
+    # ✅ %s instead of ? for PostgreSQL
     cursor.execute("""
         SELECT e.name, a.date, a.status
         FROM attendance a
         JOIN employees e ON a.employee_id = e.id
-        WHERE a.date LIKE ?
+        WHERE a.date LIKE %s
     """, (f"{month}%",))
 
     rows = cursor.fetchall()
+    cursor.close()
     conn.close()
 
     data = {}
 
     for name, date, status in rows:
-        # ✅ FIX: date is "2025-01-05", day is the 3rd part
+        # date is "2025-01-05", day is the 3rd part
         parts = date.split("-")
         if len(parts) < 3:
             continue
@@ -37,9 +38,9 @@ def save_attendance(month, employees, form_data):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ✅ FIX: delete only this month's records
+    # ✅ Delete only this month's records
     cursor.execute(
-        "DELETE FROM attendance WHERE date LIKE ?",
+        "DELETE FROM attendance WHERE date LIKE %s",
         (f"{month}%",)
     )
 
@@ -51,13 +52,16 @@ def save_attendance(month, employees, form_data):
 
         for i, status in enumerate(days):
             if status in ["P", "L"]:
-                # ✅ FIX: store as "2025-01-05" ISO format
+                # Store as "2025-01-05" ISO format
                 date = f"{month}-{i+1:02d}"
 
+                # ✅ ON CONFLICT instead of INSERT OR REPLACE for PostgreSQL
                 cursor.execute("""
-                    INSERT OR REPLACE INTO attendance (employee_id, date, status)
-                    VALUES (?, ?, ?)
+                    INSERT INTO attendance (employee_id, date, status)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (employee_id, date) DO UPDATE SET status = EXCLUDED.status
                 """, (emp_id, date, status))
 
     conn.commit()
+    cursor.close()
     conn.close()
