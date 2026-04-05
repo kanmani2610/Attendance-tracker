@@ -86,7 +86,7 @@
             border: none;
             box-shadow: 0 2px 10px rgba(255,77,141,0.3);
         }
-        .btn-weekly:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,77,141,0.4); }
+        .btn-weekly:hover { transform: translateY(-1px); }
 
         main { padding: 24px; max-width: 1400px; margin: 0 auto; }
 
@@ -198,7 +198,7 @@
             white-space: nowrap;
         }
         th:first-child { text-align: left; padding-left: 20px; min-width: 140px; }
-        th.sunday-header { color: #4a1a38; background: var(--sunday); }
+        th.sunday-header { color: #4a1a38 !important; background: var(--sunday); }
 
         td {
             padding: 10px 6px;
@@ -208,7 +208,7 @@
         }
         td:first-child { padding-left: 20px; text-align: left; }
         td.sunday-cell {
-            background: var(--sunday);
+            background: var(--sunday) !important;
             color: #4a1a38;
             font-size: 16px;
         }
@@ -248,9 +248,7 @@
             color: rgba(34,197,94,0.5);
         }
         .att-btn.p-btn.active, .att-btn.p-btn:hover {
-            background: var(--present);
-            border-color: var(--present);
-            color: #fff;
+            background: var(--present); border-color: var(--present); color: #fff;
         }
         .att-btn.l-btn {
             border-color: rgba(239,68,68,0.3);
@@ -258,9 +256,7 @@
             color: rgba(239,68,68,0.5);
         }
         .att-btn.l-btn.active, .att-btn.l-btn:hover {
-            background: var(--leave);
-            border-color: var(--leave);
-            color: #fff;
+            background: var(--leave); border-color: var(--leave); color: #fff;
         }
 
         .save-bar {
@@ -324,27 +320,64 @@
         .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
         .empty-state p { font-size: 14px; margin-top: 8px; }
 
-        /* Sunday legend */
         .legend {
             display: flex;
             gap: 16px;
             font-size: 12px;
             color: var(--muted);
             align-items: center;
+            flex-wrap: wrap;
         }
-        .legend-sunday {
+        .sunday-dot { width: 10px; height: 10px; background: #4a1a38; border-radius: 2px; display: inline-block; margin-right: 4px; }
+
+        /* ✅ TOAST POPUP */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+            padding: 16px 20px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            max-width: 320px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 10px;
+            animation: slideIn 0.3s ease, fadeOut 0.5s ease 3.5s forwards;
         }
-        .sunday-dot {
-            width: 10px; height: 10px;
-            background: #4a1a38;
-            border-radius: 2px;
+        .toast.error {
+            background: #2a0a10;
+            border: 1px solid rgba(239,68,68,0.4);
+            color: #ef4444;
+        }
+        .toast.success {
+            background: #0a2a14;
+            border: 1px solid rgba(34,197,94,0.4);
+            color: #22c55e;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(60px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to   { opacity: 0; pointer-events: none; }
         }
     </style>
 </head>
 <body>
+
+<!-- ✅ TOAST MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="toast {{ category }}">
+        {% if category == 'error' %}❌{% else %}✅{% endif %}
+        {{ message }}
+    </div>
+    {% endfor %}
+{% endwith %}
 
 <nav>
     <div class="nav-logo"><span>📋</span> BK Agencies</div>
@@ -386,9 +419,6 @@
         {% set total_days = days_in_month[month_num] %}
     {% endif %}
 
-    {# Figure out what day of week the 1st falls on (0=Mon ... 6=Sun) #}
-    {# We'll pass sunday info via JS instead #}
-
     <form method="POST">
         <input type="hidden" name="month" value="{{ selected_month }}">
 
@@ -396,9 +426,9 @@
             <div class="table-header">
                 <h2>Attendance — {{ selected_month }}</h2>
                 <div class="legend">
-                    <span><span style="color:var(--present);">● P</span> Present</span>
-                    <span><span style="color:var(--leave);">● L</span> Leave</span>
-                    <span class="legend-sunday"><span class="sunday-dot"></span> Sunday (no pay)</span>
+                    <span><span style="color:var(--present);">●</span> Present</span>
+                    <span><span style="color:var(--leave);">●</span> Leave</span>
+                    <span><span class="sunday-dot"></span> Sunday (no pay)</span>
                 </div>
             </div>
 
@@ -408,10 +438,7 @@
                         <tr>
                             <th>Employee</th>
                             {% for i in range(1, total_days + 1) %}
-                            {# Check if this day is Sunday #}
-                            {% set date_str = selected_month + '-' + '%02d'|format(i) %}
-                            {% set is_sunday = (namespace(val=false)) %}
-                            <th class="{{ 'sunday-header' if is_sunday.val else '' }}" id="th-day-{{ i }}">{{ i }}</th>
+                            <th id="th-day-{{ i }}">{{ i }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
@@ -426,7 +453,7 @@
                             </td>
                             {% for i in range(1, total_days + 1) %}
                             {% set val = attendance_data.get(emp.name, [])[i-1] if attendance_data.get(emp.name) and attendance_data.get(emp.name)|length >= i else '' %}
-                            <td class="day-cell" id="cell-{{ emp.name }}-{{ i }}">
+                            <td class="day-cell" id="cell-{{ loop.index }}-{{ i }}">
                                 <input type="hidden"
                                        name="{{ emp.name }}[]"
                                        value="{{ val or '' }}"
@@ -489,31 +516,34 @@ function setAtt(id, btn, value) {
     btn.classList.add('active');
 }
 
-// ✅ Grey out Sundays automatically
+// ✅ Auto grey out Sundays
 document.addEventListener('DOMContentLoaded', function() {
     const monthInput = "{{ selected_month }}";
     if (!monthInput) return;
 
     const [year, month] = monthInput.split('-').map(Number);
-    const headers = document.querySelectorAll('th[id^="th-day-"]');
 
-    headers.forEach(th => {
-        const day = parseInt(th.id.replace('th-day-', ''));
+    for (let day = 1; day <= 31; day++) {
         const date = new Date(year, month - 1, day);
+        if (date.getMonth() !== month - 1) break;
+
         if (date.getDay() === 0) { // Sunday
-            th.classList.add('sunday-header');
-            th.textContent = day + ' ☀';
+            const th = document.getElementById(`th-day-${day}`);
+            if (th) {
+                th.classList.add('sunday-header');
+                th.textContent = day + '☀';
+            }
 
             // Grey out all cells in this column
-            const cells = document.querySelectorAll(`[id$="-${day}"]`);
-            cells.forEach(cell => {
-                if (cell.classList.contains('day-cell')) {
+            document.querySelectorAll('.day-cell').forEach(cell => {
+                const id = cell.id;
+                if (id && id.endsWith(`-${day}`)) {
                     cell.classList.add('sunday-cell');
                     cell.innerHTML = '—';
                 }
             });
         }
-    });
+    }
 });
 </script>
 

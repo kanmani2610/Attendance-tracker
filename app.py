@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, send_file
+from flask import Flask, render_template, request, redirect, session, send_file, flash
 import os
 import pandas as pd
 from werkzeug.security import check_password_hash
@@ -57,7 +57,6 @@ def send_weekly_email(week_data, week_label):
 
         total = sum(d["amount"] for d in week_data)
 
-        # Build email body
         rows = ""
         for d in week_data:
             rows += f"""
@@ -74,7 +73,6 @@ def send_weekly_email(week_data, week_label):
             <div style="max-width:500px; margin:0 auto; background:#251020; border-radius:16px; padding:32px; border:1px solid #4a1a38;">
                 <h2 style="color:#ff4d8d; margin-bottom:4px;">BK Agencies</h2>
                 <p style="color:#b06080; margin-bottom:24px;">Saturday Payment Summary — {week_label}</p>
-
                 <table style="width:100%; border-collapse:collapse;">
                     <thead>
                         <tr style="background:#2e1428;">
@@ -83,16 +81,12 @@ def send_weekly_email(week_data, week_label):
                             <th style="padding:10px 16px; text-align:center; color:#b06080; font-size:12px;">Amount</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {rows}
-                    </tbody>
+                    <tbody>{rows}</tbody>
                 </table>
-
                 <div style="margin-top:20px; padding:16px; background:#2e1428; border-radius:10px; text-align:right;">
                     <span style="color:#b06080; font-size:14px;">Total to Pay Today:</span>
                     <span style="color:#ff4d8d; font-size:22px; font-weight:bold; margin-left:12px;">₹{total}</span>
                 </div>
-
                 <p style="color:#b06080; font-size:12px; margin-top:20px; text-align:center;">
                     This is an automated message from BK Agencies Attendance System.
                 </p>
@@ -172,13 +166,15 @@ def add_employee_route():
     try:
         salary = int(request.form["salary"])
     except Exception as e:
-        print("Salary error:", e)
-        return "Invalid salary input"
+        flash("Invalid salary input!", "error")
+        return redirect("/dashboard")
 
     try:
         add_employee(name, salary)
-    except ValueError as e:
-        return str(e)
+        flash(f"Employee '{name}' added successfully!", "success")
+    except ValueError:
+        # ✅ Show nice popup instead of ugly error page
+        flash(f"'{name}' already exists! Please use a different name.", "error")
 
     return redirect("/dashboard")
 
@@ -218,12 +214,11 @@ def report():
 
                 rows = cursor.fetchall()
 
-                # ✅ Ignore Sundays in monthly report
                 leaves = 0
                 present = 0
                 for status, date in rows:
                     date_obj = datetime.strptime(date, "%Y-%m-%d")
-                    if date_obj.weekday() == 6:  # Sunday
+                    if date_obj.weekday() == 6:  # Skip Sunday
                         continue
                     if status == "L":
                         leaves += 1
@@ -262,28 +257,20 @@ def weekly():
     employees = load_employees()
     today = datetime.today()
 
-    # Default to current week (Mon–Sat)
-    # Find Monday of current week
     monday = today - timedelta(days=today.weekday())
     saturday = monday + timedelta(days=5)
 
-    # Allow selecting a different week
     week_start_str = request.args.get("week_start", monday.strftime("%Y-%m-%d"))
     week_start = datetime.strptime(week_start_str, "%Y-%m-%d")
-    week_end = week_start + timedelta(days=5)  # Saturday
+    week_end = week_start + timedelta(days=5)
 
     week_label = f"{week_start.strftime('%d %b')} – {week_end.strftime('%d %b %Y')}"
 
-    # Get attendance for each employee for this week (Mon-Sat, skip Sunday)
     week_data = get_weekly_attendance(employees, week_start, week_end)
 
-    # Check if today is Saturday — show email button
     is_saturday = today.weekday() == 5
-
-    # Check if email already sent today
     email_sent = session.get("email_sent_date") == today.strftime("%Y-%m-%d")
 
-    # Handle send email
     if request.method == "POST":
         success = send_weekly_email(week_data, week_label)
         if success:
@@ -292,7 +279,6 @@ def weekly():
 
     email_status = request.args.get("email")
 
-    # Previous and next week navigation
     prev_week = (week_start - timedelta(days=7)).strftime("%Y-%m-%d")
     next_week = (week_start + timedelta(days=7)).strftime("%Y-%m-%d")
 
