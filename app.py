@@ -19,17 +19,17 @@ from services.attendance_service import get_attendance, save_attendance, get_wee
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-secret")
 
-# ✅ IMPORTANT
+
 init_db()
 
-# 📧 EMAIL CONFIG
+
 SENDER_EMAIL = "jkanmani691@gmail.com"
 SENDER_PASSWORD = os.environ.get("EMAIL_PASSWORD", "ljbt rhow gmmk oucb")
 RECEIVER_EMAILS = ["jaikumar.197306@gmail.com", "kanmanijayakumar26022007@gmail.com"]
 DAILY_RATE = 100  # ₹100 per day
 
 
-# 🔐 LOGIN DECORATOR
+
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -39,7 +39,7 @@ def login_required(f):
     return wrapper
 
 
-# 🔐 ADMIN CONFIG
+
 ADMIN_USER = os.getenv("ADMIN_USER", "Kanmani")
 ADMIN_PASS_HASH = os.getenv(
     "ADMIN_PASS_HASH",
@@ -47,7 +47,7 @@ ADMIN_PASS_HASH = os.getenv(
 )
 
 
-# 📧 SEND WEEKLY EMAIL
+
 def send_weekly_email(week_data, week_label):
     try:
         msg = MIMEMultipart("alternative")
@@ -101,15 +101,15 @@ def send_weekly_email(week_data, week_label):
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.sendmail(SENDER_EMAIL, RECEIVER_EMAILS, msg.as_string())
 
-        print("✅ Weekly email sent!")
+        print(" Weekly email sent!")
         return True
 
     except Exception as e:
-        print(f"❌ Email error: {e}")
+        print(f" Email error: {e}")
         return False
 
 
-# 🔐 LOGIN
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -125,14 +125,14 @@ def login():
     return render_template("login.html")
 
 
-# 🚪 LOGOUT
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
 
-# 📅 DASHBOARD
+
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
@@ -158,7 +158,7 @@ def dashboard():
     )
 
 
-# ➕ ADD EMPLOYEE
+
 @app.route("/add", methods=["POST"])
 @login_required
 def add_employee_route():
@@ -173,7 +173,7 @@ def add_employee_route():
         add_employee(name, salary)
         flash(f"Employee '{name}' added successfully!", "success")
     except ValueError:
-        # ✅ Show nice popup instead of ugly error page
+        
         flash(f"'{name}' already exists! Please use a different name.", "error")
 
     return redirect("/dashboard")
@@ -187,7 +187,7 @@ def delete_employee_route(id):
     return redirect("/dashboard")
 
 
-# 📊 REPORT
+
 @app.route("/report", methods=["GET", "POST"])
 @login_required
 def report():
@@ -250,7 +250,7 @@ def report():
         return str(e), 500
 
 
-# 📅 WEEKLY SUMMARY
+
 @app.route("/weekly", methods=["GET", "POST"])
 @login_required
 def weekly():

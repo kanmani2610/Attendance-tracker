@@ -289,14 +289,14 @@
         <a href="/weekly?week_start={{ next_week }}">›</a>
     </div>
 
-    <!-- SUCCESS MESSAGE -->
+    
     {% if email_status == 'sent' %}
     <div class="success-banner">
         ✅ Payment summary emailed successfully to both emails!
     </div>
     {% endif %}
 
-    <!-- SATURDAY EMAIL BANNER -->
+    
     {% if is_saturday and not email_sent %}
     <div class="email-banner">
         <div class="email-banner-text">

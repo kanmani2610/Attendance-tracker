@@ -1,7 +1,7 @@
 import psycopg2
 import os
 
-# ✅ Use PostgreSQL on Render via DATABASE_URL environment variable
+
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 

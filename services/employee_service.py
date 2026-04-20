@@ -5,7 +5,7 @@ def load_employees():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ✅ %s instead of ? for PostgreSQL
+    
     cursor.execute("SELECT id, name, salary FROM employees")
     rows = cursor.fetchall()
 
@@ -27,7 +27,7 @@ def add_employee(name, salary):
     cursor = conn.cursor()
 
     try:
-        # ✅ %s instead of ? for PostgreSQL
+        
         cursor.execute(
             "INSERT INTO employees (name, salary) VALUES (%s, %s)",
             (name.strip(), int(salary))
@@ -45,7 +45,7 @@ def delete_employee(emp_id):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ✅ %s instead of ? for PostgreSQL
+    
     cursor.execute("DELETE FROM employees WHERE id = %s", (emp_id,))
     conn.commit()
     cursor.close()
